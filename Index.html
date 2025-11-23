@@ -1,235 +1,191 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Adbhutam Chat</title>
 
 <style>
-  body {
-    margin: 0;
-    padding: 0;
-    background: #0b0a09; /* Dark Coffee */
-    font-family: Arial, sans-serif;
-    color: #e3d6c8;
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-  }
+/* ----------------------------------
+   GLOBAL THEME (Dark Coffee)
+---------------------------------- */
+body {
+  margin: 0;
+  padding: 0;
+  background: #0b0a09;
+  color: #e6d6c5;
+  font-family: "Inter", sans-serif;
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
 
-  /* Chat area */
-  #chat {
-    flex: 1;
-    overflow-y: auto;
-    padding: 20px;
-    box-sizing: border-box;
-  }
+/* ----------------------------------
+   SIDEBAR (Left)
+---------------------------------- */
+#sidebar {
+  width: 250px;
+  background: #14110f;
+  border-right: 1px solid #2e251f;
+  display: flex;
+  flex-direction: column;
+  padding: 20px 12px;
+}
 
-  /* User + Bot messages */
-  .msg {
-    max-width: 85%;
-    margin-bottom: 18px;
-    padding: 12px 16px;
-    border-radius: 12px;
-    line-height: 1.5;
-    font-size: 15px;
-    white-space: pre-wrap;
-  }
+#sidebar h2 {
+  color: #c69c6d;
+  font-size: 20px;
+  margin-bottom: 15px;
+}
 
-  .user {
-    background: #2f241c;
-    align-self: flex-end;
-  }
+.chat-item {
+  padding: 10px;
+  background: #1d1815;
+  margin-bottom: 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  border: 1px solid #2e251f;
+}
+.chat-item:hover {
+  background: #2e251f;
+}
 
-  .bot {
-    background: #16110e;
-    border-left: 4px solid #c69c6d;
-    align-self: flex-start;
-  }
+/* ----------------------------------
+   MAIN CHAT AREA
+---------------------------------- */
+#main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
 
-  /* Input bar */
-  #inputBar {
-    display: flex;
-    padding: 12px;
-    background: #1a1612;
-  }
+/* TOP BAR */
+#topBar {
+  background: #14110f;
+  padding: 15px;
+  font-size: 16px;
+  border-bottom: 1px solid #2e251f;
+  color: #c49b6e;
+}
 
-  #input {
-    flex: 1;
-    padding: 12px;
-    border-radius: 8px;
-    background: #26211d;
-    border: 1px solid #3d332c;
-    color: #f5e8d8;
-    font-size: 15px;
-    outline: none;
-  }
+/* CHAT WINDOW */
+#chat {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+}
 
-  #sendBtn {
-    margin-left: 10px;
-    background: #c69c6d;
-    border: none;
-    padding: 12px 18px;
-    border-radius: 8px;
-    font-weight: bold;
-    cursor: pointer;
+/* Messages */
+.msg {
+  max-width: 80%;
+  padding: 14px 18px;
+  border-radius: 12px;
+  line-height: 1.5;
+  margin-bottom: 18px;
+  white-space: pre-wrap;
+  font-size: 15px;
+}
+
+.user {
+  background: #2d241e;
+  margin-left: auto;
+}
+
+.bot {
+  background: #16110e;
+  border-left: 4px solid #c69c6d;
+}
+
+/* FILE PREVIEW */
+#filePreview {
+  padding: 10px 15px;
+  background: #1a1612;
+  border-top: 1px solid #2e251f;
+  display: none;
+}
+
+.file-item {
+  padding: 8px;
+  background: #2b221c;
+  border-radius: 6px;
+  margin-bottom: 5px;
+  font-size: 14px;
+  border: 1px solid #3d332c;
+}
+
+/* INPUT BAR */
+#inputBar {
+  display: flex;
+  padding: 14px;
+  background: #14110f;
+  border-top: 1px solid #2e251f;
+}
+
+#input {
+  flex: 1;
+  padding: 12px;
+  background: #26211d;
+  border: 1px solid #3d332c;
+  border-radius: 8px;
+  color: #f5e8d8;
+  font-size: 15px;
+  outline: none;
+}
+
+#sendBtn {
+  margin-left: 10px;
+  padding: 12px 18px;
+  background: #c69c6d;
+  border: none;
+  color: #000;
+  font-weight: bold;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+#attachBtn {
+  background: none;
+  border: none;
+  font-size: 22px;
+  color: #c69c6d;
+  margin-right: 10px;
+  cursor: pointer;
+}
+
+/* MOBILE */
+@media (max-width: 600px) {
+  #sidebar {
+    display: none;
   }
+}
 </style>
 </head>
 
 <body>
 
-<div id="chat"></div>
-
-<div id="inputBar">
-  <input id="input" placeholder="Type a message..." />
-  <button id="sendBtn">Send</button>
+<!-- LEFT SIDEBAR -->
+<div id="sidebar">
+  <h2>💬 Chats</h2>
+  <div class="chat-item">New Chat</div>
+  <div class="chat-item">History 1</div>
+  <div class="chat-item">History 2</div>
 </div>
 
-<script>
-const API = "https://adbhutam-brain.onrender.com/api/chat";
-const chat = document.getElementById("chat");
-const input = document.getElementById("input");
-const sendBtn = document.getElementById("sendBtn");
+<!-- MAIN CHAT -->
+<div id="main">
+  <div id="topBar">Adbhutam Brain — <span style="color:#6bc46b;">Online</span></div>
 
-function addMessage(text, cls) {
-  const div = document.createElement("div");
-  div.className = "msg " + cls;
-  div.textContent = text;
-  chat.appendChild(div);
-  chat.scrollTop = chat.scrollHeight;
-}
+  <div id="chat"></div>
 
-async function send() {
-  const text = input.value.trim();
-  if (!text) return;
+  <div id="filePreview"></div>
 
-  addMessage(text, "user");
-  input.value = "";
+  <div id="inputBar">
+    <button id="attachBtn">📎</button>
+    <input type="file" id="fileInput" multiple style="display:none" />
 
-  try {
-    const r = await fetch(API, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: text })
-    });
-
-    const data = await r.json();
-    addMessage(data.reply || "[No reply]", "bot");
-  } catch (err) {
-    addMessage("⚠ Server error: " + err.message, "bot");
-  }
-}
-
-sendBtn.onclick = send;
-input.addEventListener("keypress", e => {
-  if (e.key === "Enter") send();
-});
-</script>
-  <!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Adbhutam Chat</title>
-
-<style>
-  body {
-    margin: 0;
-    padding: 0;
-    background: #0b0a09;
-    font-family: Arial, sans-serif;
-    color: #e3d6c8;
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-  }
-
-  #chat {
-    flex: 1;
-    overflow-y: auto;
-    padding: 20px;
-  }
-
-  .msg {
-    max-width: 85%;
-    margin-bottom: 18px;
-    padding: 12px 16px;
-    border-radius: 12px;
-    line-height: 1.5;
-    white-space: pre-wrap;
-  }
-
-  .user { background: #2f241c; align-self: flex-end; }
-  .bot  { background: #16110e; border-left: 4px solid #c69c6d; }
-
-  #inputBar {
-    display: flex;
-    align-items: center;
-    padding: 12px;
-    background: #1a1612;
-  }
-
-  #input {
-    flex: 1;
-    padding: 12px;
-    border-radius: 8px;
-    background: #26211d;
-    border: 1px solid #3d332c;
-    color: #f5e8d8;
-    font-size: 15px;
-  }
-
-  #sendBtn {
-    margin-left: 10px;
-    background: #c69c6d;
-    border: none;
-    padding: 12px 18px;
-    border-radius: 8px;
-    font-weight: bold;
-    cursor: pointer;
-  }
-
-  /* FILE UPLOAD ICON */
-  #attachBtn {
-    background: none;
-    border: none;
-    font-size: 22px;
-    color: #c69c6d;
-    margin-right: 10px;
-    cursor: pointer;
-  }
-
-  #filePreview {
-    padding: 10px;
-    background: #1a1612;
-    border-top: 1px solid #3d332c;
-  }
-
-  .file-item {
-    padding: 6px 10px;
-    margin-bottom: 6px;
-    background: #2b221c;
-    border: 1px solid #3d332c;
-    border-radius: 6px;
-    font-size: 14px;
-  }
-</style>
-</head>
-
-<body>
-
-<div id="chat"></div>
-
-<div id="filePreview" style="display:none;"></div>
-
-<div id="inputBar">
-
-  <button id="attachBtn">📎</button>
-  <input type="file" id="fileInput" multiple style="display:none">
-
-  <input id="input" placeholder="Type a message..." />
-  <button id="sendBtn">Send</button>
+    <input id="input" placeholder="Type your message..." />
+    <button id="sendBtn">Send</button>
+  </div>
 </div>
 
 <script>
@@ -244,30 +200,36 @@ const filePreview = document.getElementById("filePreview");
 
 let attachedFiles = [];
 
-// Add message to chat-box
+/* Add Chat Bubble */
 function addMessage(text, cls) {
   const div = document.createElement("div");
   div.className = "msg " + cls;
-  div.textContent = text;
+
+  // Markdown → Basic formatting
+  div.innerHTML = text
+    .replace(/\*\*(.*?)\*\*/g, "<b>$1</b>")
+    .replace(/\n/g, "<br>");
+
   chat.appendChild(div);
   chat.scrollTop = chat.scrollHeight;
 }
 
-// Convert FILE → Base64
+/* File → Base64 */
 function fileToBase64(file) {
   return new Promise((resolve) => {
     const reader = new FileReader();
-    reader.onload = () => resolve({
-      name: file.name,
-      type: file.type,
-      size: file.size,
-      data: reader.result
-    });
+    reader.onload = () =>
+      resolve({
+        name: file.name,
+        type: file.type,
+        size: file.size,
+        data: reader.result,
+      });
     reader.readAsDataURL(file);
   });
 }
 
-// SHOW FILE PREVIEW
+/* Show file preview */
 fileInput.onchange = () => {
   attachedFiles = Array.from(fileInput.files);
 
@@ -279,21 +241,20 @@ fileInput.onchange = () => {
   filePreview.style.display = "block";
   filePreview.innerHTML = "";
 
-  attachedFiles.forEach(f => {
+  attachedFiles.forEach((f) => {
     const item = document.createElement("div");
     item.className = "file-item";
-    item.textContent = f.name + " (" + Math.round(f.size/1024) + " KB)";
+    item.textContent = f.name + " (" + Math.round(f.size / 1024) + " KB)";
     filePreview.appendChild(item);
   });
 };
 
-// SEND MESSAGE + FILES
+/* SEND MESSAGE */
 async function send() {
   const text = input.value.trim();
   if (!text && attachedFiles.length === 0) return;
 
-  addMessage(text || "[File(s) Uploaded]", "user");
-
+  addMessage(text || "[File Uploaded]", "user");
   input.value = "";
 
   let files64 = [];
@@ -301,7 +262,7 @@ async function send() {
     files64.push(await fileToBase64(f));
   }
 
-  // Clear preview
+  // Clear
   attachedFiles = [];
   fileInput.value = "";
   filePreview.style.display = "none";
@@ -312,29 +273,21 @@ async function send() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         message: text,
-        files: files64
-      })
+        files: files64,
+      }),
     });
 
     const data = await r.json();
     addMessage(data.reply || "[No reply]", "bot");
-
   } catch (err) {
     addMessage("⚠ Server error: " + err.message, "bot");
   }
 }
 
-// EVENTS
-attachBtn.onclick = () => fileInput.click();
 sendBtn.onclick = send;
-
-input.addEventListener("keypress", e => {
-  if (e.key === "Enter") send();
-});
+attachBtn.onclick = () => fileInput.click();
+input.addEventListener("keypress", (e) => e.key === "Enter" && send());
 </script>
-
-</body>
-</html>
 
 </body>
 </html>
