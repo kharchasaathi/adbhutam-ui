@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Adbhutam Chat</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <style>
+    :root{
+      --coffee-bg: #1b130f;
+      --coffee-panel: #241712;
+      --coffee-panel-soft: #2c1c15;
+      --coffee-accent: #c07a3f;
+      --coffee-accent-soft: #f3cf9b;
+      --coffee-text: #f5e6d3;
+      --coffee-text-soft: #c3a892;
+      --coffee-user: #4b2e19;
+      --coffee-ai: #2d211b;
+      --border: #3b271d;
+      --danger: #ff8989;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #26160f 0, #120b08 60%);
+      color: var(--coffee-text);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* HEADER (simple, like ChatGPT) */
+    header {
+      flex: 0 0 auto;
+      padding: 8px 14px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(18,12,8,0.95);
+      backdrop-filter: blur(12px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    header .title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    header .title span.icon {
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      background: radial-gradient(circle at 30% 0, #f3cf9b 0, #c07a3f 45%, #5a321c 100%);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      box-shadow: 0 0 10px rgba(192,122,63,0.6);
+    }
+
+    header .meta {
+      font-size: 11px;
+      color: var(--coffee-text-soft);
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    header .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #4ade80;
+      box-shadow: 0 0 10px rgba(74,222,128,0.8);
+    }
+
+    /* APP LAYOUT */
+    .app {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    /* CHAT AREA */
+    #chat {
+      flex: 1;
+      padding: 16px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .msg-row {
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+    }
+
+    .msg-row.user {
+      justify-content: flex-end;
+    }
+
+    .msg-bubble {
+      max-width: min(680px, 100%);
+      padding: 10px 12px;
+      border-radius: 14px;
+      font-size: 14px;
+      line-height: 1.4;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      border: 1px solid transparent;
+    }
+
+    .msg-row.user .msg-bubble {
+      background: var(--coffee-user);
+      border-color: #5e3922;
+      border-bottom-right-radius: 4px;
+    }
+
+    .msg-row.ai .msg-bubble {
+      background: var(--coffee-ai);
+      border-color: #403128;
+      border-bottom-left-radius: 4px;
+    }
+
+    .msg-meta {
+      font-size: 11px;
+      color: var(--coffee-text-soft);
+      margin-top: 2px;
+    }
+
+    .avatar {
+      flex: 0 0 auto;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+
+    .avatar.ai {
+      background: #3b2619;
+      color: var(--coffee-accent-soft);
+    }
+
+    .avatar.user {
+      background: #5f3924;
+      color: #ffe9c6;
+    }
+
+    /* FILE CHIP */
+    .file-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: #3c2a1f;
+      border: 1px solid #5a3b28;
+      margin-top: 4px;
+    }
+
+    /* COMPOSER (bottom input bar) */
+    .composer-wrap {
+      padding: 10px 12px 16px;
+      background: linear-gradient(to top, #120b08, #18100b);
+      border-top: 1px solid var(--border);
+    }
+
+    .composer {
+      max-width: 900px;
+      margin: 0 auto;
+      background: var(--coffee-panel);
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .composer-row {
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+    }
+
+    #prompt {
+      flex: 1;
+      border: none;
+      outline: none;
+      resize: none;
+      background: transparent;
+      color: var(--coffee-text);
+      font-size: 14px;
+      max-height: 120px;
+      min-height: 40px;
+    }
+
+    #prompt::placeholder {
+      color: var(--coffee-text-soft);
+    }
+
+    .btn-icon {
+      border-radius: 999px;
+      border: none;
+      width: 32px;
+      height: 32px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      background: #3c281d;
+      color: var(--coffee-text-soft);
+      flex-shrink: 0;
+      font-size: 16px;
+    }
+
+    .btn-icon:hover {
+      background: #4a3022;
+    }
+
+    #sendBtn {
+      background: var(--coffee-accent);
+      color: #211309;
+      font-weight: 600;
+      width: 36px;
+      height: 36px;
+    }
+
+    #sendBtn:hover {
+      background: #d5873f;
+    }
+
+    #fileInput {
+      display: none;
+    }
+
+    .composer-footer {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--coffee-text-soft);
+      padding: 0 4px 2px;
+    }
+
+    .error {
+      color: var(--danger);
+    }
+
+    .loading-dots::after {
+      content: "…";
+      animation: blink 1s infinite steps(1, start);
+    }
+
+    @keyframes blink {
+      0%, 100% { content: "…"; }
+      33%      { content: "."; }
+      66%      { content: ".."; }
+    }
+
+    @media (max-width: 600px) {
+      header .meta { display: none; }
+      .composer { border-radius: 10px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="title">
+    <span class="icon">A</span>
+    <span>Adbhutam Chat</span>
+  </div>
+  <div class="meta">
+    <span class="dot"></span>
+    <span>Cloud Brain • Telugu + English</span>
+  </div>
+</header>
+
+<div class="app">
+  <div id="chat">
+    <!-- initial welcome message -->
+    <div class="msg-row ai">
+      <div class="avatar ai">🤖</div>
+      <div>
+        <div class="msg-bubble">
+          నమస్తే! నేను <b>Adbhutam</b> — నీ personal AI dev సహాయకుడు.<br><br>
+          👉 HTML / CSS / JS UI structure అడుగు<br>
+          👉 “ఈ UI కి structure చూపెట్టు” లాంటి ప్రాంప్ట్ ఇస్తే code blocks గా కూడా పంపుతాను.<br><br>
+          మొదట ఏం ప్రయత్నించాలి అనుకుంటున్నావు?
+        </div>
+        <div class="msg-meta">Adbhutam • ready</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Composer -->
+  <div class="composer-wrap">
+    <div class="composer">
+      <div class="composer-row">
+        <label for="fileInput" class="btn-icon" title="Attach files">
+          📎
+        </label>
+        <textarea
+          id="prompt"
+          placeholder="Message Adbhutam… (Press Enter to send, Shift+Enter for new line)"
+        ></textarea>
+        <button id="sendBtn" class="btn-icon" title="Send">
+          ➤
+        </button>
+      </div>
+      <div class="composer-footer">
+        <span>Files just attach అవుతాయి (పేరు + size). అవసరమైతే context గా పంపుతాను.</span>
+        <span id="statusLine"></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<input id="fileInput" type="file" multiple />
+
+<script>
+  // 👉 నీ cloud backend URL ఇక్కడ పెట్టు:
+  // const CLOUD_SERVER = "https://your-backend.onrender.com";
+  const CLOUD_SERVER = ""; // backend URL లేకుంటే brain.js fallback వాడుతుంది
+
+  const chatEl = document.getElementById("chat");
+  const promptEl = document.getElementById("prompt");
+  const sendBtn = document.getElementById("sendBtn");
+  const fileInput = document.getElementById("fileInput");
+  const statusLine = document.getElementById("statusLine");
+
+  let attachedFiles = [];
+
+  function scrollToBottom() {
+    chatEl.scrollTop = chatEl.scrollHeight;
+  }
+
+  function addMessage(text, who = "ai", extraEl = null) {
+    const row = document.createElement("div");
+    row.className = "msg-row " + who;
+
+    const avatar = document.createElement("div");
+    avatar.className = "avatar " + who;
+    avatar.textContent = who === "user" ? "🧑‍💻" : "🤖";
+
+    const wrap = document.createElement("div");
+    const bubble = document.createElement("div");
+    bubble.className = "msg-bubble";
+    bubble.textContent = text;
+
+    wrap.appendChild(bubble);
+
+    if (extraEl) {
+      wrap.appendChild(extraEl);
+    }
+
+    const meta = document.createElement("div");
+    meta.className = "msg-meta";
+    const now = new Date();
+    const hh = now.getHours().toString().padStart(2, "0");
+    const mm = now.getMinutes().toString().padStart(2, "0");
+    meta.textContent = (who === "user" ? "You" : "Adbhutam") + " • " + hh + ":" + mm;
+    wrap.appendChild(meta);
+
+    if (who === "user") {
+      row.appendChild(wrap);
+      row.appendChild(avatar);
+    } else {
+      row.appendChild(avatar);
+      row.appendChild(wrap);
+    }
+
+    chatEl.appendChild(row);
+    scrollToBottom();
+    return bubble;
+  }
+
+  function addFilesChip(files) {
+    if (!files || !files.length) return null;
+    const chip = document.createElement("div");
+    chip.className = "file-chip";
+
+    if (files.length === 1) {
+      const f = files[0];
+      chip.textContent = "📎 " + f.name + " (" + (f.size / 1024).toFixed(1) + " KB)";
+    } else {
+      chip.textContent = "📎 " + files.length + " files attached";
+    }
+
+    return chip;
+  }
+
+  fileInput.addEventListener("change", (e) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+
+    attachedFiles = attachedFiles.concat(files);
+
+    const chip = addFilesChip(files);
+    addMessage("Files attached.", "user", chip);
+
+    statusLine.textContent = attachedFiles.length + " file(s) attached.";
+    scrollToBottom();
+  });
+
+  function setStatus(msg, isError = false) {
+    statusLine.textContent = msg || "";
+    statusLine.classList.toggle("error", !!isError);
+  }
+
+  async function sendMessage() {
+    const text = promptEl.value.trim();
+    if (!text && attachedFiles.length === 0) return;
+
+    const filesChip = addFilesChip(attachedFiles);
+    addMessage(text || "(no text)", "user", filesChip);
+    promptEl.value = "";
+    setStatus("");
+
+    // prepare context: just file names + sizes (simple)
+    const context = {
+      files: attachedFiles.map(f => ({
+        name: f.name,
+        size: f.size,
+        type: f.type
+      }))
+    };
+    attachedFiles = [];
+    fileInput.value = "";
+    statusLine.textContent = "";
+
+    // loading bubble
+    const loadingBubble = addMessage("Thinking", "ai");
+    loadingBubble.classList.add("loading-dots");
+
+    try {
+      let replyText = "⚠ No backend configured.";
+
+      if (window.brain && typeof window.brain.think === "function") {
+        // brain.js ఉంది అంటే దాన్ని use చెయ్యి
+        replyText = await window.brain.think(text, context);
+      } else if (CLOUD_SERVER) {
+        const res = await fetch(CLOUD_SERVER + "/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: text, context })
+        });
+
+        if (!res.ok) {
+          replyText = "⚠ Server error: " + res.status;
+        } else {
+          const data = await res.json();
+          replyText = data.reply || "⚠ Empty reply from server.";
+        }
+      }
+
+      loadingBubble.classList.remove("loading-dots");
+      loadingBubble.textContent = replyText;
+      scrollToBottom();
+    } catch (err) {
+      loadingBubble.classList.remove("loading-dots");
+      loadingBubble.textContent = "⚠ Network error: " + err.message;
+      setStatus("Network error వచ్చింది.", true);
+    }
+  }
+
+  sendBtn.addEventListener("click", sendMessage);
+
+  promptEl.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  });
+</script>
+
+</body>
+</html>
