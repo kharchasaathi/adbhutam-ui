@@ -7,7 +7,7 @@ console.log("Adbhutam Super Brain v10 Loaded");
 let CLOUD_SERVER = window.CLOUD_SERVER || "";
 
 // Base API Caller
-async function callServer(message, context = {}) {
+async function callServer(message, context = {}, files = []) {
   if (!CLOUD_SERVER) {
     return "⚠ Backend URL missing. Please set CLOUD_SERVER.";
   }
@@ -16,7 +16,7 @@ async function callServer(message, context = {}) {
     const res = await fetch(CLOUD_SERVER + "/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message, context })
+      body: JSON.stringify({ message, context, files })
     });
 
     const data = await res.json();
@@ -169,6 +169,7 @@ window.brain = {
         return "🧩 Code generation will be handled by server.";
 
       default:
+        // Client-side 'send' function handles passing files to callServer.
         return BrainCore.callServer(message, context);
     }
   }
