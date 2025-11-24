@@ -7,6 +7,7 @@ console.log("Adbhutam Super Brain v10 Loaded");
 let CLOUD_SERVER = window.CLOUD_SERVER || "";
 
 // Base API Caller
+// 🟢 CORRECTION: Added 'files = []' parameter and included it in the JSON body
 async function callServer(message, context = {}, files = []) {
   if (!CLOUD_SERVER) {
     return "⚠ Backend URL missing. Please set CLOUD_SERVER.";
@@ -16,7 +17,7 @@ async function callServer(message, context = {}, files = []) {
     const res = await fetch(CLOUD_SERVER + "/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message, context, files })
+      body: JSON.stringify({ message, context, files }) // 'files' included
     });
 
     const data = await res.json();
