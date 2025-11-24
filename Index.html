@@ -6,13 +6,13 @@
   <title>Adbhutam Chat</title>
 
   <style>
-    /* GLOBAL THEME – dark coffee */
+    /* GLOBAL THEME – Dark Coffee */
     body {
       margin: 0;
       padding: 0;
       background: #0b0a09;
       color: #e6d6c5;
-      font-family: "Inter", sans-serif;
+      font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
       display: flex;
       height: 100vh;
       overflow: hidden;
@@ -20,30 +20,45 @@
 
     /* LEFT SIDEBAR */
     #sidebar {
-      width: 250px;
+      width: 260px;
       background: #14110f;
       border-right: 1px solid #2e251f;
       display: flex;
       flex-direction: column;
-      padding: 20px 12px;
+      padding: 16px 12px;
+      box-sizing: border-box;
     }
 
-    #sidebar h2 {
-      color: #c69c6d;
-      font-size: 20px;
-      margin-bottom: 15px;
+    #logo {
+      font-size: 18px;
+      font-weight: 600;
+      color: #f4e3c8;
+      margin-bottom: 8px;
+    }
+
+    #status {
+      font-size: 13px;
+      color: #8ee58e;
+      margin-bottom: 18px;
     }
 
     .chat-item {
-      padding: 10px;
+      padding: 9px 10px;
       background: #1d1815;
       margin-bottom: 8px;
       border-radius: 8px;
       cursor: pointer;
       border: 1px solid #2e251f;
+      font-size: 14px;
     }
+
     .chat-item:hover {
       background: #2e251f;
+    }
+
+    .chat-item.danger {
+      border-color: #6b3131;
+      color: #f7b0b0;
     }
 
     /* MAIN AREA */
@@ -53,18 +68,30 @@
       flex-direction: column;
     }
 
+    /* TOP BAR */
     #topBar {
       background: #14110f;
-      padding: 15px;
-      font-size: 16px;
+      padding: 14px 20px;
+      font-size: 15px;
       border-bottom: 1px solid #2e251f;
       color: #c49b6e;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-sizing: border-box;
     }
 
+    #topBar span.small {
+      font-size: 12px;
+      color: #8a7a66;
+    }
+
+    /* CHAT WINDOW */
     #chat {
       flex: 1;
       overflow-y: auto;
       padding: 20px;
+      box-sizing: border-box;
     }
 
     .msg {
@@ -72,64 +99,48 @@
       padding: 14px 18px;
       border-radius: 12px;
       line-height: 1.5;
-      margin-bottom: 18px;
-      white-space: pre-wrap;
+      margin-bottom: 16px;
       font-size: 15px;
+      white-space: pre-wrap;
+      box-sizing: border-box;
     }
 
-    .user {
+    .msg.user {
       background: #2d241e;
       margin-left: auto;
     }
 
-    .bot {
+    .msg.bot {
       background: #16110e;
       border-left: 4px solid #c69c6d;
     }
 
+    /* file preview */
     #filePreview {
-      padding: 10px 15px;
+      padding: 10px 16px;
       background: #1a1612;
       border-top: 1px solid #2e251f;
       display: none;
+      box-sizing: border-box;
     }
 
     .file-item {
-      padding: 8px;
+      padding: 6px 8px;
+      margin-bottom: 6px;
       background: #2b221c;
       border-radius: 6px;
-      margin-bottom: 5px;
-      font-size: 14px;
+      font-size: 13px;
       border: 1px solid #3d332c;
     }
 
+    /* INPUT BAR */
     #inputBar {
       display: flex;
-      padding: 14px;
+      align-items: center;
+      padding: 12px 14px;
       background: #14110f;
       border-top: 1px solid #2e251f;
-    }
-
-    #input {
-      flex: 1;
-      padding: 12px;
-      background: #26211d;
-      border: 1px solid #3d332c;
-      border-radius: 8px;
-      color: #f5e8d8;
-      font-size: 15px;
-      outline: none;
-    }
-
-    #sendBtn {
-      margin-left: 10px;
-      padding: 12px 18px;
-      background: #c69c6d;
-      border: none;
-      color: #000;
-      font-weight: bold;
-      border-radius: 8px;
-      cursor: pointer;
+      box-sizing: border-box;
     }
 
     #attachBtn {
@@ -141,7 +152,31 @@
       cursor: pointer;
     }
 
-    @media (max-width: 600px) {
+    #input {
+      flex: 1;
+      padding: 11px 12px;
+      background: #26211d;
+      border: 1px solid #3d332c;
+      border-radius: 8px;
+      color: #f5e8d8;
+      font-size: 15px;
+      outline: none;
+      box-sizing: border-box;
+    }
+
+    #sendBtn {
+      margin-left: 10px;
+      padding: 11px 18px;
+      background: #c69c6d;
+      border: none;
+      color: #000;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    /* MOBILE */
+    @media (max-width: 700px) {
       #sidebar {
         display: none;
       }
@@ -152,15 +187,19 @@
 <body>
   <!-- LEFT SIDEBAR -->
   <div id="sidebar">
-    <h2>💬 Chats</h2>
-    <div class="chat-item">New Chat</div>
-    <div class="chat-item">History 1</div>
-    <div class="chat-item">History 2</div>
+    <div id="logo">Adbhutam Brain</div>
+    <div id="status">● Online</div>
+
+    <div class="chat-item" id="newChatBtn">＋ New Chat</div>
+    <div class="chat-item danger" id="clearHistoryBtn">⟲ Clear History</div>
   </div>
 
   <!-- MAIN CHAT -->
   <div id="main">
-    <div id="topBar">Adbhutam Brain — <span style="color:#6bc46b;">Online</span></div>
+    <div id="topBar">
+      <div>Adbhutam Brain — <span style="color:#6bc46b;">Online</span></div>
+      <span class="small">Local history save: ON</span>
+    </div>
 
     <div id="chat"></div>
     <div id="filePreview"></div>
@@ -174,6 +213,7 @@
   </div>
 
   <script>
+    // API URL – already working Render backend
     const API = "https://adbhutam-brain.onrender.com/api/chat";
 
     const chat = document.getElementById("chat");
@@ -182,37 +222,78 @@
     const attachBtn = document.getElementById("attachBtn");
     const fileInput = document.getElementById("fileInput");
     const filePreview = document.getElementById("filePreview");
+    const newChatBtn = document.getElementById("newChatBtn");
+    const clearHistoryBtn = document.getElementById("clearHistoryBtn");
 
     let attachedFiles = [];
+    let history = [];
 
+    // ----- Load history from localStorage -----
+    (function loadHistory() {
+      try {
+        const stored = localStorage.getItem("adbhutam_history_v1");
+        if (stored) {
+          history = JSON.parse(stored);
+          history.forEach(m => {
+            const div = document.createElement("div");
+            div.className = "msg " + m.cls;
+            div.innerHTML = m.text;
+            chat.appendChild(div);
+          });
+          chat.scrollTop = chat.scrollHeight;
+        }
+      } catch (e) {
+        console.error("history load failed", e);
+        history = [];
+      }
+    })();
+
+    function saveHistory() {
+      try {
+        localStorage.setItem("adbhutam_history_v1", JSON.stringify(history));
+      } catch (e) {
+        console.error("history save failed", e);
+      }
+    }
+
+    // ----- Add message bubble -----
     function addMessage(text, cls) {
       const div = document.createElement("div");
       div.className = "msg " + cls;
-      div.innerHTML = (text || "")
+
+      // basic markdown formatting
+      const html = text
         .replace(/\*\*(.*?)\*\*/g, "<b>$1</b>")
         .replace(/\n/g, "<br>");
+
+      div.innerHTML = html;
       chat.appendChild(div);
       chat.scrollTop = chat.scrollHeight;
+
+      history.push({ text: html, cls });
+      saveHistory();
     }
 
+    // ----- File → base64 -----
     function fileToBase64(file) {
-      return new Promise((resolve) => {
+      return new Promise(resolve => {
         const reader = new FileReader();
         reader.onload = () =>
           resolve({
             name: file.name,
             type: file.type,
             size: file.size,
-            data: reader.result,
+            data: reader.result
           });
         reader.readAsDataURL(file);
       });
     }
 
+    // ----- File preview -----
     fileInput.onchange = () => {
       attachedFiles = Array.from(fileInput.files);
 
-      if (attachedFiles.length === 0) {
+      if (!attachedFiles.length) {
         filePreview.style.display = "none";
         return;
       }
@@ -220,7 +301,7 @@
       filePreview.style.display = "block";
       filePreview.innerHTML = "";
 
-      attachedFiles.forEach((f) => {
+      attachedFiles.forEach(f => {
         const item = document.createElement("div");
         item.className = "file-item";
         item.textContent = `${f.name} (${Math.round(f.size / 1024)} KB)`;
@@ -228,13 +309,15 @@
       });
     };
 
+    // ----- SEND -----
     async function send() {
       const text = input.value.trim();
-      if (!text && attachedFiles.length === 0) return;
+      if (!text && !attachedFiles.length) return;
 
-      addMessage(text || "[File(s) uploaded]", "user");
+      addMessage(text || "[Files uploaded]", "user");
       input.value = "";
 
+      // convert files
       let files64 = [];
       for (let f of attachedFiles) {
         files64.push(await fileToBase64(f));
@@ -243,60 +326,43 @@
       attachedFiles = [];
       fileInput.value = "";
       filePreview.style.display = "none";
+      filePreview.innerHTML = "";
 
       try {
         const r = await fetch(API, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message: text, files: files64 }),
+          body: JSON.stringify({ message: text, files: files64 })
         });
-
-        if (!r.ok) {
-          addMessage("⚠ HTTP error: " + r.status, "bot");
-          return;
-        }
 
         const data = await r.json();
         addMessage(data.reply || "[No reply]", "bot");
       } catch (err) {
-        addMessage("⚠ Network error: " + err.message, "bot");
+        addMessage("⚠ Server error: " + err.message, "bot");
       }
     }
 
     sendBtn.onclick = send;
     attachBtn.onclick = () => fileInput.click();
-    input.addEventListener("keypress", (e) => {
+    input.addEventListener("keypress", e => {
       if (e.key === "Enter") send();
     });
-    // ==== STORAGE ====
-function saveChat() {
-  localStorage.setItem("adbhutam_chat", chat.innerHTML);
-}
 
-function loadChat() {
-  const saved = localStorage.getItem("adbhutam_chat");
-  if (saved) chat.innerHTML = saved;
-  chat.scrollTop = chat.scrollHeight;
-}
+    // ----- New Chat (clear screen but keep old history saved separately if needed) -----
+    newChatBtn.onclick = () => {
+      chat.innerHTML = "";
+      history = [];
+      saveHistory();
+    };
 
-// load on start
-loadChat();
-
-
-// ==== MESSAGE ADD ====
-function addMessage(text, cls) {
-  const div = document.createElement("div");
-  div.className = "msg " + cls;
-
-  div.innerHTML = (text || "")
-    .replace(/\*\*(.*?)\*\*/g, "<b>$1</b>")
-    .replace(/\n/g, "<br>");
-
-  chat.appendChild(div);
-  chat.scrollTop = chat.scrollHeight;
-
-  saveChat(); // 🔥 Chat saved automatically
-}
+    // ----- Clear all history (from localStorage too) -----
+    clearHistoryBtn.onclick = () => {
+      if (confirm("Entire chat history clear చేయాలా?")) {
+        history = [];
+        saveHistory();
+        chat.innerHTML = "";
+      }
+    };
   </script>
 </body>
 </html>
