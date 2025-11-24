@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Adbhutam Chat</title>
 
 <style>
@@ -11,7 +11,7 @@ body {
   padding: 0;
   background: #0b0a09;
   color: #e6d6c5;
-  font-family: "Inter", sans-serif;
+  font-family: Arial, sans-serif;
   display: flex;
   flex-direction: column;
   height: 100vh;
@@ -21,9 +21,9 @@ body {
 #topBar {
   background: #14110f;
   padding: 15px;
-  font-size: 16px;
   border-bottom: 1px solid #2e251f;
-  color: #c49b6e;
+  color: #c69c6d;
+  font-size: 16px;
 }
 
 #chat {
@@ -34,12 +34,11 @@ body {
 
 .msg {
   max-width: 80%;
-  padding: 14px 18px;
-  border-radius: 12px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  margin-bottom: 15px;
   line-height: 1.5;
-  margin-bottom: 18px;
   white-space: pre-wrap;
-  font-size: 15px;
 }
 
 .user {
@@ -53,24 +52,23 @@ body {
 }
 
 #filePreview {
-  padding: 10px 15px;
+  padding: 10px;
   background: #1a1612;
   border-top: 1px solid #2e251f;
   display: none;
 }
 
 .file-item {
-  padding: 8px;
+  padding: 6px;
   background: #2b221c;
-  border-radius: 6px;
-  margin-bottom: 5px;
-  font-size: 14px;
   border: 1px solid #3d332c;
+  margin-bottom: 5px;
+  border-radius: 6px;
 }
 
 #inputBar {
   display: flex;
-  padding: 14px;
+  padding: 12px;
   background: #14110f;
   border-top: 1px solid #2e251f;
 }
@@ -82,6 +80,7 @@ body {
   border: 1px solid #3d332c;
   border-radius: 8px;
   color: #f5e8d8;
+  outline: none;
   font-size: 15px;
 }
 
@@ -90,8 +89,8 @@ body {
   padding: 12px 18px;
   background: #c69c6d;
   border: none;
-  font-weight: bold;
   border-radius: 8px;
+  font-weight: bold;
   cursor: pointer;
 }
 
@@ -100,8 +99,8 @@ body {
   border: none;
   font-size: 22px;
   color: #c69c6d;
-  margin-right: 10px;
   cursor: pointer;
+  margin-right: 10px;
 }
 </style>
 </head>
@@ -116,7 +115,7 @@ body {
 
 <div id="inputBar">
   <button id="attachBtn">📎</button>
-  <input type="file" id="fileInput" multiple style="display:none" />
+  <input type="file" id="fileInput" multiple style="display:none">
   <input id="input" placeholder="Type your message..." />
   <button id="sendBtn">Send</button>
 </div>
@@ -143,29 +142,33 @@ function addMessage(text, cls) {
 
 function fileToBase64(file) {
   return new Promise((resolve) => {
-    const fr = new FileReader();
-    fr.onload = () =>
-      resolve({ name: file.name, size: file.size, data: fr.result });
-    fr.readAsDataURL(file);
+    const reader = new FileReader();
+    reader.onload = () => resolve({
+      name: file.name,
+      type: file.type,
+      size: file.size,
+      data: reader.result
+    });
+    reader.readAsDataURL(file);
   });
 }
 
 fileInput.onchange = () => {
   attachedFiles = Array.from(fileInput.files);
 
+  filePreview.innerHTML = "";
   if (attachedFiles.length === 0) {
     filePreview.style.display = "none";
     return;
   }
 
   filePreview.style.display = "block";
-  filePreview.innerHTML = "";
 
-  attachedFiles.forEach((f) => {
-    const item = document.createElement("div");
-    item.className = "file-item";
-    item.textContent = `${f.name} (${Math.round(f.size / 1024)} KB)`;
-    filePreview.appendChild(item);
+  attachedFiles.forEach(f => {
+    const div = document.createElement("div");
+    div.className = "file-item";
+    div.textContent = `${f.name} (${Math.round(f.size/1024)} KB)`;
+    filePreview.appendChild(div);
   });
 };
 
@@ -177,20 +180,25 @@ async function send() {
   input.value = "";
 
   let files64 = [];
-  for (let f of attachedFiles) files64.push(await fileToBase64(f));
+
+  for (let f of attachedFiles)
+    files64.push(await fileToBase64(f));
 
   attachedFiles = [];
   fileInput.value = "";
   filePreview.style.display = "none";
 
   try {
-    const r = await fetch(API, {
+    const res = await fetch(API, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: text, files: files64 })
+      body: JSON.stringify({
+        message: text,
+        files: files64
+      })
     });
 
-    const data = await r.json();
+    const data = await res.json();
     addMessage(data.reply || "[No reply]", "bot");
   } catch (err) {
     addMessage("⚠ Server error: " + err.message, "bot");
@@ -199,7 +207,7 @@ async function send() {
 
 sendBtn.onclick = send;
 attachBtn.onclick = () => fileInput.click();
-input.addEventListener("keypress", (e) => e.key === "Enter" && send());
+input.addEventListener("keypress", e => e.key === "Enter" && send());
 </script>
 
 </body>
