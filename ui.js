@@ -5,7 +5,9 @@
  * - Talks to Cloud Brain via HTTP
  */
 
-const API_BASE = "https://adbhutam-cloud-brain.up.railway.app";
+// ✅ PRODUCTION BACKEND URL (FINAL)
+const API_BASE =
+  "https://adbhutam-cloud-brain-production.up.railway.app";
 
 const chat = document.getElementById("chat");
 const input = document.getElementById("input");
@@ -47,6 +49,7 @@ async function sendMessage() {
   const text = input.value.trim();
   if (!text) return;
 
+  // user message
   addMessage(text, "user");
   input.value = "";
   showThinking();
@@ -54,23 +57,25 @@ async function sendMessage() {
   try {
     const res = await fetch(`${API_BASE}/brain`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json"
+      },
       body: JSON.stringify({ message: text })
     });
 
     const data = await res.json();
     removeThinking();
 
-    const reply =
-      data?.result?.decision?.status
-        ? JSON.stringify(data.result, null, 2)
-        : "No response";
+    // Pretty reply
+    const reply = data?.result
+      ? JSON.stringify(data.result, null, 2)
+      : "No response from brain";
 
     addMessage(reply, "system");
 
   } catch (err) {
     removeThinking();
-    addMessage("⚠️ Server error. Please try again.", "system");
+    addMessage("⚠️ Cloud Brain not reachable", "system");
     console.error(err);
   }
 }
