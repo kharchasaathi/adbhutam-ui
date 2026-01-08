@@ -1,8 +1,8 @@
 /**
  * index.js
  *
- * Adbhutam – Brain Engine (NO UI)
- * --------------------------------
+ * Adbhutam – Brain Engine (ASYNC, NO UI)
+ * --------------------------------------
  * Pure pipeline execution
  * - NO DOM access
  * - NO rendering
@@ -24,9 +24,9 @@ import Response from "./core/007_response.js";
  * ----------------------
  * This is the ONLY public entry
  */
-window.runAdbhutam = function (rawText) {
+window.runAdbhutam = async function (rawText) {
 
-  // Empty input (preserve old semantics)
+  // ✅ Empty input — preserve OLD semantics
   if (!rawText || String(rawText).trim() === "") {
     return {
       stage: "ui",
@@ -53,7 +53,7 @@ window.runAdbhutam = function (rawText) {
   // 006 – Finalize
   const f = Finalize.process(v);
 
-  // 🔒 Canonical pipeline truth (unchanged from old code)
+  // 🔒 Canonical pipeline truth (PRESERVED)
   const pipelineResult = {
     pipeline: [
       "001_understand",
@@ -66,12 +66,12 @@ window.runAdbhutam = function (rawText) {
     result: f
   };
 
-  // 🗣️ Human-style reply (Option-B)
-  const replyText = Response.process(pipelineResult, rawText);
+  // 🧠 Human-style reply (LLM-powered, ASYNC)
+  const replyText = await Response.process(pipelineResult, rawText);
 
-  // ✅ Return EVERYTHING (no loss)
+  // ✅ Return EVERYTHING (old + new, NO BREAKAGE)
   return {
     ...pipelineResult, // old behavior preserved
-    reply: replyText   // new capability added
+    reply: replyText   // new async capability added
   };
 };
