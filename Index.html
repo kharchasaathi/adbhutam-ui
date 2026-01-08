@@ -149,52 +149,81 @@
 
   <!-- Master Orchestrator -->
   <script type="module">
-    import "./index.js";
+  import "./index.js";
 
-    // UI glue only (NO LOGIC)
-    const input = document.getElementById("input");
-    const sendBtn = document.getElementById("send");
-    const chat = document.getElementById("chat");
+  // UI only — no logic
+  const input = document.getElementById("input");
+  const sendBtn = document.getElementById("send");
+  const chat = document.getElementById("chat");
 
-    function addMessage(text, cls) {
-      const wrap = document.createElement("div");
-      wrap.className = "msg " + cls;
+  let thinkingBubble = null;
 
-      const bubble = document.createElement("div");
-      bubble.className = "bubble";
-      bubble.textContent = text;
+  function addMessage(text, cls) {
+    const wrap = document.createElement("div");
+    wrap.className = "msg " + cls;
 
-      wrap.appendChild(bubble);
-      chat.appendChild(wrap);
-      chat.scrollTop = chat.scrollHeight;
+    const bubble = document.createElement("div");
+    bubble.className = "bubble";
+    bubble.textContent = text;
+
+    wrap.appendChild(bubble);
+    chat.appendChild(wrap);
+    chat.scrollTop = chat.scrollHeight;
+
+    return bubble;
+  }
+
+  function showThinking() {
+    thinkingBubble = addMessage("Thinking…", "system");
+  }
+
+  function removeThinking() {
+    if (thinkingBubble) {
+      thinkingBubble.parentElement.remove();
+      thinkingBubble = null;
     }
+  }
 
-    // Hook into existing pipeline output
-    const originalRender = window.renderOutput;
-    window.renderOutput = function (data) {
-      addMessage(JSON.stringify(data, null, 2), "system");
-      if (originalRender) originalRender(data);
-    };
+  function streamText(text) {
+    const bubble = addMessage("", "system");
+    let i = 0;
 
-    sendBtn.onclick = () => {
-      const text = input.value.trim();
-      if (!text) return;
+    const interval = setInterval(() => {
+      bubble.textContent += text[i];
+      chat.scrollTop = chat.scrollHeight;
+      i++;
+      if (i >= text.length) clearInterval(interval);
+    }, 10);
+  }
 
-      addMessage(text, "user");
-      input.value = "";
+  // Hook pipeline output
+  const originalRender = window.renderOutput;
+  window.renderOutput = function (data) {
+    removeThinking();
+    streamText(JSON.stringify(data, null, 2));
+    if (originalRender) originalRender(data);
+  };
 
-      // trigger pipeline
-      const event = new KeyboardEvent("keydown", { key: "Enter" });
-      input.dispatchEvent(event);
-    };
+  sendBtn.onclick = () => {
+    const text = input.value.trim();
+    if (!text) return;
 
-    input.addEventListener("keydown", e => {
-      if (e.key === "Enter" && !e.shiftKey) {
-        e.preventDefault();
-        sendBtn.click();
-      }
-    });
-  </script>
+    addMessage(text, "user");
+    input.value = "";
+    showThinking();
+
+    // trigger pipeline
+    const event = new KeyboardEvent("keydown", { key: "Enter" });
+    input.dispatchEvent(event);
+  };
+
+  input.addEventListener("keydown", e => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendBtn.click();
+    }
+  });
+</script>
 
 </body>
 </html>
