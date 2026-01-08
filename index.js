@@ -21,48 +21,69 @@ import Execute from "./core/004_execute.js";
 import Validate from "./core/005_validate.js";
 import Finalize from "./core/006_finalize.js";
 
-// DOM elements
-const inputEl = document.getElementById("input");
-const outputEl = document.getElementById("output");
+document.addEventListener("DOMContentLoaded", () => {
 
-// Utility: render JSON safely
-function renderOutput(data) {
-  outputEl.textContent = JSON.stringify(data, null, 2);
-}
+  const inputEl = document.getElementById("input");
+  const outputEl = document.getElementById("output");
 
-// Main pipeline executor
-function processInput() {
-  const rawText = inputEl.value;
-
-  if (!rawText || rawText.trim() === "") {
-    renderOutput({
-      stage: "ui",
-      error: "Input is empty",
-      hint: "Type something and press Enter"
-    });
+  if (!inputEl || !outputEl) {
+    console.error("UI elements not found", { inputEl, outputEl });
     return;
   }
 
-  // 001 – Understand
-  const understandResult = Understand.process(rawText);
+  function renderOutput(data) {
+    outputEl.textContent = JSON.stringify(data, null, 2);
+  }
 
-  // 002 – Decide
-  const decideResult = Decide.process(understandResult);
+  function processInput() {
+    const rawText = inputEl.value;
 
-  // 003 – Plan
-  const planResult = Plan.process(decideResult, understandResult);
+    if (!rawText || rawText.trim() === "") {
+      renderOutput({
+        stage: "ui",
+        error: "Input is empty",
+        hint: "Type something and press Enter"
+      });
+      return;
+    }
 
-  // 004 – Execute
-  const executeResult = Execute.process(planResult);
+    const understandResult = Understand.process(rawText);
+    const decideResult = Decide.process(understandResult);
+    const planResult = Plan.process(decideResult, understandResult);
+    const executeResult = Execute.process(planResult);
+    const validateResult = Validate.process(executeResult);
+    const finalResult = Finalize.process(validateResult);
 
-  // 005 – Validate
-  const validateResult = Validate.process(executeResult);
+    renderOutput({
+      pipeline: [
+        "001_understand",
+        "002_decide",
+        "003_plan",
+        "004_execute",
+        "005_validate",
+        "006_finalize"
+      ],
+      result: finalResult
+    });
+  }
 
-  // 006 – Finalize
-  const finalResult = Finalize.process(validateResult);
+  // expose safely (for future chat UI, debugging, etc.)
+  window.Adbhutham = {
+    processInput,
+    renderOutput
+  };
 
-  // UI shows ONLY final, trusted output
+  inputEl.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      processInput();
+    }
+  });
+
+  inputEl.focus();
+
   renderOutput({
+    status: "Ready",
     pipeline: [
       "001_understand",
       "002_decide",
@@ -71,31 +92,7 @@ function processInput() {
       "005_validate",
       "006_finalize"
     ],
-    result: finalResult
+    message: "Type a request and press Enter"
   });
-}
 
-// Event bindings
-inputEl.addEventListener("keydown", (e) => {
-  if (e.key === "Enter" && !e.shiftKey) {
-    e.preventDefault();
-    processInput();
-  }
-});
-
-// Auto-focus
-inputEl.focus();
-
-// Initial state
-renderOutput({
-  status: "Ready",
-  pipeline: [
-    "001_understand",
-    "002_decide",
-    "003_plan",
-    "004_execute",
-    "005_validate",
-    "006_finalize"
-  ],
-  message: "Type a request and press Enter"
 });
