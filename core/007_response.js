@@ -1,43 +1,53 @@
 /**
  * core/007_response.js
  *
- * Adbhutam – Response Layer
- * ------------------------
- * - Converts FINAL pipeline output into human text
- * - NO logic decisions
- * - NO execution
+ * Response Layer (LLM-powered)
+ * -----------------------------
+ * - Converts FINAL pipeline state → human reply
+ * - Delegates language + reasoning to ChatGPT
+ * - NO fake intelligence
+ * - NO hardcoded answers
  */
+
+import { callLLM } from "../server/llmGateway.js";
 
 const Response = {};
 
-Response.process = function (finalPayload, rawText) {
-  // Safety fallback
-  if (!finalPayload || !finalPayload.result) {
-    return "Something went wrong. Please try again.";
+Response.process = async function (finalPayload, rawText) {
+  // Safety guard
+  if (!rawText || !rawText.trim()) {
+    return "Please type something first.";
   }
 
-  const r = finalPayload.result;
+  const systemPrompt = `
+You are "Adbhutam Brain".
 
-  // Friendly greeting
-  if (rawText.trim().toLowerCase() === "hi") {
-    return "Hello 👋 How can I help you today?";
-  }
+Rules:
+- Understand Telugu, English, or mixed input
+- Reply naturally in the SAME language as the user
+- Be clear, concise, and human-like
+- Use reasoning, not canned responses
+- If information is missing, ASK instead of assuming
+- Do NOT hallucinate facts or code
+`;
 
-  // Validation failed → helpful guidance
-  if (r.trusted === false) {
-    return (
-      "I understood your request, but something is missing.\n\n" +
-      "Issue: " + r.summary + "\n" +
-      "Next step: " + r.next.replace(/_/g, " ")
-    );
-  }
+  const userPrompt = `
+User Input:
+${rawText}
 
-  // Success case
-  return (
-    "✅ Done.\n\n" +
-    "Summary:\n" +
-    (r.summary || "Request processed successfully.")
-  );
+System State (JSON):
+${JSON.stringify(finalPayload, null, 2)}
+
+Task:
+Generate the best possible reply for the user.
+`;
+
+  const reply = await callLLM({
+    system: systemPrompt,
+    user: userPrompt
+  });
+
+  return reply;
 };
 
 export default Response;
