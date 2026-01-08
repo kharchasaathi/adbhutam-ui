@@ -2,7 +2,7 @@
  * index.js
  *
  * Adbhutam – Brain Engine (NO UI)
- * ------------------------------
+ * --------------------------------
  * Pure pipeline execution
  * - NO DOM access
  * - NO rendering
@@ -17,6 +17,7 @@ import Plan from "./core/003_plan.js";
 import Execute from "./core/004_execute.js";
 import Validate from "./core/005_validate.js";
 import Finalize from "./core/006_finalize.js";
+import Response from "./core/007_response.js";
 
 /**
  * Global pipeline runner
@@ -24,10 +25,13 @@ import Finalize from "./core/006_finalize.js";
  * This is the ONLY public entry
  */
 window.runAdbhutam = function (rawText) {
+
+  // Empty input (preserve old semantics)
   if (!rawText || String(rawText).trim() === "") {
     return {
       stage: "ui",
-      error: "Input is empty"
+      error: "Input is empty",
+      reply: "Please type something first."
     };
   }
 
@@ -49,7 +53,8 @@ window.runAdbhutam = function (rawText) {
   // 006 – Finalize
   const f = Finalize.process(v);
 
-  return {
+  // 🔒 Canonical pipeline truth (unchanged from old code)
+  const pipelineResult = {
     pipeline: [
       "001_understand",
       "002_decide",
@@ -59,5 +64,14 @@ window.runAdbhutam = function (rawText) {
       "006_finalize"
     ],
     result: f
+  };
+
+  // 🗣️ Human-style reply (Option-B)
+  const replyText = Response.process(pipelineResult, rawText);
+
+  // ✅ Return EVERYTHING (no loss)
+  return {
+    ...pipelineResult, // old behavior preserved
+    reply: replyText   // new capability added
   };
 };
