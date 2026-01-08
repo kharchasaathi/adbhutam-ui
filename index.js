@@ -1,17 +1,14 @@
 /**
  * index.js
  *
- * Adbhutam – Master Orchestrator
+ * Adbhutam – Brain Engine (NO UI)
  * ------------------------------
- * Full Pipeline:
- * UI →
- * 001_understand →
- * 002_decide →
- * 003_plan →
- * 004_execute →
- * 005_validate →
- * 006_finalize →
- * UI Output
+ * Pure pipeline execution
+ * - NO DOM access
+ * - NO rendering
+ * - NO event listeners
+ *
+ * UI / API / CLI can call this safely
  */
 
 import Understand from "./core/001_understand.js";
@@ -21,69 +18,38 @@ import Execute from "./core/004_execute.js";
 import Validate from "./core/005_validate.js";
 import Finalize from "./core/006_finalize.js";
 
-document.addEventListener("DOMContentLoaded", () => {
-
-  const inputEl = document.getElementById("input");
-  const outputEl = document.getElementById("output");
-
-  if (!inputEl || !outputEl) {
-    console.error("UI elements not found", { inputEl, outputEl });
-    return;
+/**
+ * Global pipeline runner
+ * ----------------------
+ * This is the ONLY public entry
+ */
+window.runAdbhutam = function (rawText) {
+  if (!rawText || String(rawText).trim() === "") {
+    return {
+      stage: "ui",
+      error: "Input is empty"
+    };
   }
 
-  function renderOutput(data) {
-    outputEl.textContent = JSON.stringify(data, null, 2);
-  }
+  // 001 – Understand
+  const u = Understand.process(rawText);
 
-  function processInput() {
-    const rawText = inputEl.value;
+  // 002 – Decide
+  const d = Decide.process(u);
 
-    if (!rawText || rawText.trim() === "") {
-      renderOutput({
-        stage: "ui",
-        error: "Input is empty",
-        hint: "Type something and press Enter"
-      });
-      return;
-    }
+  // 003 – Plan
+  const p = Plan.process(d, u);
 
-    const understandResult = Understand.process(rawText);
-    const decideResult = Decide.process(understandResult);
-    const planResult = Plan.process(decideResult, understandResult);
-    const executeResult = Execute.process(planResult);
-    const validateResult = Validate.process(executeResult);
-    const finalResult = Finalize.process(validateResult);
+  // 004 – Execute
+  const e = Execute.process(p);
 
-    renderOutput({
-      pipeline: [
-        "001_understand",
-        "002_decide",
-        "003_plan",
-        "004_execute",
-        "005_validate",
-        "006_finalize"
-      ],
-      result: finalResult
-    });
-  }
+  // 005 – Validate
+  const v = Validate.process(e);
 
-  // expose safely (for future chat UI, debugging, etc.)
-  window.Adbhutham = {
-    processInput,
-    renderOutput
-  };
+  // 006 – Finalize
+  const f = Finalize.process(v);
 
-  inputEl.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      processInput();
-    }
-  });
-
-  inputEl.focus();
-
-  renderOutput({
-    status: "Ready",
+  return {
     pipeline: [
       "001_understand",
       "002_decide",
@@ -92,7 +58,6 @@ document.addEventListener("DOMContentLoaded", () => {
       "005_validate",
       "006_finalize"
     ],
-    message: "Type a request and press Enter"
-  });
-
-});
+    result: f
+  };
+};
