@@ -1,48 +1,52 @@
 /**
  * index.js
  *
- * Adbhutam – Master Orchestrator (UI → Brain)
- * ------------------------------------------
- * - Reads user input
- * - Passes it through brain pipeline
- * - Displays structured output
- * - NO answering
- * - NO AI
+ * Adbhutam – Master Orchestrator
+ * ------------------------------
+ * Pipeline:
+ *   UI → 001_understand → 002_decide → output
  */
 
 import Understand from "./core/001_understand.js";
+import Decide from "./core/002_decide.js";
 
 // DOM elements
 const inputEl = document.getElementById("input");
 const outputEl = document.getElementById("output");
 
-// Utility: safe render
+// Utility: render JSON safely
 function renderOutput(data) {
   outputEl.textContent = JSON.stringify(data, null, 2);
 }
 
-// Main trigger
+// Main pipeline executor
 function processInput() {
   const rawText = inputEl.value;
 
   if (!rawText || rawText.trim() === "") {
     renderOutput({
+      stage: "ui",
       error: "Input is empty",
-      hint: "Type something to start the pipeline"
+      hint: "Type something and press Enter"
     });
     return;
   }
 
-  // Stage 1: Understanding
+  // Stage 1: Understand
   const understandResult = Understand.process(rawText);
 
-  // For now, just display the understanding output
-  renderOutput(understandResult);
+  // Stage 2: Decide
+  const decideResult = Decide.process(understandResult);
+
+  // Final combined output (for now)
+  renderOutput({
+    pipeline: ["001_understand", "002_decide"],
+    understand: understandResult,
+    decide: decideResult
+  });
 }
 
 // Event bindings
-
-// Enter key (Ctrl+Enter or plain Enter)
 inputEl.addEventListener("keydown", (e) => {
   if (e.key === "Enter" && !e.shiftKey) {
     e.preventDefault();
@@ -50,12 +54,12 @@ inputEl.addEventListener("keydown", (e) => {
   }
 });
 
-// Optional: auto-focus
+// Auto-focus
 inputEl.focus();
 
 // Initial state
 renderOutput({
   status: "Ready",
-  next: "Type a request and press Enter",
-  pipeline: ["001_understand"]
+  pipeline: ["001_understand", "002_decide"],
+  message: "Type a request and press Enter"
 });
