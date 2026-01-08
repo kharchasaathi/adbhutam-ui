@@ -1,16 +1,17 @@
 /**
  * core/001_understand.js
  *
- * Adbhutam – Understanding Layer
- * ------------------------------
+ * Adbhutam – Understanding Layer (Merged & Correct)
+ * -------------------------------------------------
  * Responsibility:
- *  - Convert raw human input into structured intent
- *  - NO answering
- *  - NO assumptions
- *  - NO domain hardcoding
+ *  - Normalize input
+ *  - Detect language (Telugu / English / Mixed)
+ *  - Detect user intent (action + target)
+ *  - Measure clarity
  *
- * Output of this file is the ONLY truth
- * for all next pipeline stages.
+ * NO answering
+ * NO assumptions
+ * This output is the ONLY truth for the pipeline
  */
 
 const Understand = {};
@@ -26,22 +27,32 @@ function normalizeInput(input) {
 }
 
 /**
+ * Detect language
+ */
+function detectLanguage(text) {
+  if (/[\u0C00-\u0C7F]/.test(text)) {
+    if (/[a-zA-Z]/.test(text)) return "mixed";
+    return "telugu";
+  }
+  return "english";
+}
+
+/**
  * Detect basic user action intent
- * (WHAT user wants to do)
  */
 function detectAction(text) {
   const t = text.toLowerCase();
 
-  if (/\b(build|create|generate|make|develop)\b/.test(t)) {
+  if (/(build|create|generate|make|develop|చేయాలి|తయారు)/.test(t)) {
     return "build";
   }
-  if (/\b(fix|debug|solve|repair|error)\b/.test(t)) {
+  if (/(fix|debug|solve|repair|error|సరిచేయి|పొరపాటు)/.test(t)) {
     return "fix";
   }
-  if (/\b(explain|why|how|what is|define)\b/.test(t)) {
+  if (/(explain|why|how|what is|define|ఎలా|ఏంటి)/.test(t)) {
     return "explain";
   }
-  if (/\b(compare|decide|choose|better)\b/.test(t)) {
+  if (/(compare|decide|choose|better)/.test(t)) {
     return "decide";
   }
 
@@ -50,7 +61,6 @@ function detectAction(text) {
 
 /**
  * Detect target abstraction
- * (WHAT kind of thing the action applies to)
  */
 function detectTarget(text) {
   const t = text.toLowerCase();
@@ -86,11 +96,11 @@ function measureClarity(action, target) {
 
 /**
  * MAIN ENTRY
- * This is the ONLY exported function
  */
 Understand.process = function (rawInput) {
   const text = normalizeInput(rawInput);
 
+  const language = detectLanguage(text);
   const action = detectAction(text);
   const target = detectTarget(text);
   const clarity = measureClarity(action, target);
@@ -99,6 +109,7 @@ Understand.process = function (rawInput) {
     stage: "understand",
     raw: rawInput,
     normalized: text,
+    language,
     intent: {
       action,   // build | fix | explain | decide | ask
       target,   // code | system | architecture | data | unknown
