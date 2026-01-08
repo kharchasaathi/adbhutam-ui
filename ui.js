@@ -1,16 +1,8 @@
 import "./index.js";
 
-/**
- * UI Layer
- * --------
- * - Renders user + system messages
- * - NO logic
- * - NO pipeline
- */
-
-const chat = document.getElementById("chat");
 const input = document.getElementById("input");
-const send = document.getElementById("send");
+const sendBtn = document.getElementById("send");
+const chat = document.getElementById("chat");
 
 function addMessage(text, cls) {
   const wrap = document.createElement("div");
@@ -25,33 +17,25 @@ function addMessage(text, cls) {
   chat.scrollTop = chat.scrollHeight;
 }
 
-/**
- * Hook pipeline output safely
- */
-window.renderOutput = function (data) {
-  addMessage(JSON.stringify(data, null, 2), "system");
-};
-
-/**
- * Send user input
- */
-function sendMessage() {
+sendBtn.onclick = () => {
   const text = input.value.trim();
   if (!text) return;
 
   addMessage(text, "user");
   input.value = "";
 
-  // Trigger pipeline (simulate Enter)
-  const evt = new KeyboardEvent("keydown", { key: "Enter" });
-  input.dispatchEvent(evt);
-}
+  addMessage("Thinking…", "system");
 
-send.onclick = sendMessage;
+  setTimeout(() => {
+    const result = window.runAdbhutam(text);
+    chat.lastChild.remove(); // remove Thinking…
+    addMessage(JSON.stringify(result, null, 2), "system");
+  }, 10);
+};
 
 input.addEventListener("keydown", e => {
   if (e.key === "Enter" && !e.shiftKey) {
     e.preventDefault();
-    sendMessage();
+    sendBtn.click();
   }
 });
