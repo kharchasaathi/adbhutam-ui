@@ -112,4 +112,4 @@ Understand.process = function (rawInput) {
   };
 };
 
-module.exports = Understand;
+export default Understand;
