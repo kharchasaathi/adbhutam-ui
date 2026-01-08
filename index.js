@@ -1,16 +1,17 @@
 /**
  * index.js
  *
- * Adbhutam – Brain Engine (ASYNC, NO UI)
- * --------------------------------------
- * Pure pipeline execution
- * - NO DOM access
- * - NO rendering
- * - NO event listeners
- *
- * UI / API / CLI can call this safely
+ * Adbhutam – Brain + API Server
+ * -----------------------------
+ * - Preserves FULL old pipeline behavior
+ * - Adds Express server for Railway
+ * - Adds LLM (Gemini / OpenAI) support
+ * - Works for UI + API + Future apps
  */
 
+import express from "express";
+
+// 🧠 Brain pipeline
 import Understand from "./core/001_understand.js";
 import Decide from "./core/002_decide.js";
 import Plan from "./core/003_plan.js";
@@ -19,14 +20,15 @@ import Validate from "./core/005_validate.js";
 import Finalize from "./core/006_finalize.js";
 import Response from "./core/007_response.js";
 
-/**
- * Global pipeline runner
- * ----------------------
- * This is the ONLY public entry
- */
-window.runAdbhutam = async function (rawText) {
+// 🔌 LLM Gateway
+import { callLLM } from "./server/llmGateway.js";
 
-  // ✅ Empty input — preserve OLD semantics
+/* ------------------------------------------------------------------
+   🧠 CORE BRAIN FUNCTION (OLD BEHAVIOR 100% PRESERVED)
+------------------------------------------------------------------ */
+
+async function runAdbhutam(rawText) {
+
   if (!rawText || String(rawText).trim() === "") {
     return {
       stage: "ui",
@@ -53,7 +55,6 @@ window.runAdbhutam = async function (rawText) {
   // 006 – Finalize
   const f = Finalize.process(v);
 
-  // 🔒 Canonical pipeline truth (PRESERVED)
   const pipelineResult = {
     pipeline: [
       "001_understand",
@@ -66,12 +67,65 @@ window.runAdbhutam = async function (rawText) {
     result: f
   };
 
-  // 🧠 Human-style reply (LLM-powered, ASYNC)
+  // 🧠 LLM-generated human reply
   const replyText = await Response.process(pipelineResult, rawText);
 
-  // ✅ Return EVERYTHING (old + new, NO BREAKAGE)
   return {
-    ...pipelineResult, // old behavior preserved
-    reply: replyText   // new async capability added
+    ...pipelineResult,
+    reply: replyText
   };
-};
+}
+
+/* ------------------------------------------------------------------
+   🌐 BROWSER COMPATIBILITY (NO BREAKAGE)
+------------------------------------------------------------------ */
+
+if (typeof window !== "undefined") {
+  window.runAdbhutam = runAdbhutam;
+}
+
+/* ------------------------------------------------------------------
+   🚀 EXPRESS SERVER (FOR RAILWAY)
+------------------------------------------------------------------ */
+
+const app = express();
+app.use(express.json());
+
+app.get("/", (req, res) => {
+  res.send("Adbhutam API is running");
+});
+
+// 🔍 Health check
+app.get("/health", (req, res) => {
+  res.json({ status: "ok" });
+});
+
+// 🧠 Full brain execution via API
+app.post("/run", async (req, res) => {
+  try {
+    const { input } = req.body;
+    const output = await runAdbhutam(input);
+    res.json({ ok: true, output });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+// 🧪 Direct LLM test
+app.get("/test-llm", async (req, res) => {
+  try {
+    const out = await callLLM({
+      type: "language",
+      prompt: "Hello in Telugu"
+    });
+    res.json({ ok: true, out });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 🚪 Railway port
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log("🚀 Adbhutam server running on port", PORT);
+});
