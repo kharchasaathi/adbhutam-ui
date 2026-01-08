@@ -1,12 +1,11 @@
-import "./index.js";
-
 /**
  * UI Layer (ChatGPT-style)
  * ------------------------
- * - Handles rendering only
- * - NO pipeline logic
- * - Talks to Brain via window.runAdbhutam()
+ * - Rendering only
+ * - Talks to Cloud Brain via HTTP
  */
+
+const API_BASE = "https://adbhutam-cloud-brain.up.railway.app";
 
 const chat = document.getElementById("chat");
 const input = document.getElementById("input");
@@ -14,9 +13,8 @@ const sendBtn = document.getElementById("send");
 
 let thinkingBubble = null;
 
-/**
- * Render message bubble
- */
+/* ---------------- UI helpers ---------------- */
+
 function addMessage(text, cls) {
   const wrap = document.createElement("div");
   wrap.className = "msg " + cls;
@@ -32,16 +30,10 @@ function addMessage(text, cls) {
   return wrap;
 }
 
-/**
- * Show "Thinking…" indicator
- */
 function showThinking() {
   thinkingBubble = addMessage("Thinking…", "system");
 }
 
-/**
- * Remove thinking bubble safely
- */
 function removeThinking() {
   if (thinkingBubble) {
     thinkingBubble.remove();
@@ -49,42 +41,42 @@ function removeThinking() {
   }
 }
 
-/**
- * Handle send
- */
-function sendMessage() {
+/* ---------------- Main send logic ---------------- */
+
+async function sendMessage() {
   const text = input.value.trim();
   if (!text) return;
 
-  // User message
   addMessage(text, "user");
   input.value = "";
-
-  // System thinking
   showThinking();
 
-  // Small async gap (feels natural, avoids UI freeze)
-  setTimeout(() => {
-    const result = window.runAdbhutam(text);
+  try {
+    const res = await fetch(`${API_BASE}/brain`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: text })
+    });
 
+    const data = await res.json();
     removeThinking();
 
-    // Fallback safety
     const reply =
-      result?.reply ||
-      "Something went wrong. Please try again.";
+      data?.result?.decision?.status
+        ? JSON.stringify(data.result, null, 2)
+        : "No response";
 
     addMessage(reply, "system");
 
-    // 🔍 Optional dev debug (comment out in prod)
-    // console.debug("Adbhutam debug:", result);
-
-  }, 20);
+  } catch (err) {
+    removeThinking();
+    addMessage("⚠️ Server error. Please try again.", "system");
+    console.error(err);
+  }
 }
 
-/**
- * Events
- */
+/* ---------------- Events ---------------- */
+
 sendBtn.addEventListener("click", sendMessage);
 
 input.addEventListener("keydown", (e) => {
