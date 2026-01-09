@@ -2,7 +2,8 @@
  * UI Layer (ChatGPT-style)
  * ------------------------
  * - Brain debug (deterministic)
- * - Human-style reply (LLM)
+ * - Human-style reply (Gemini LLM)
+ * - Strong error handling
  * - Production safe
  */
 
@@ -50,60 +51,72 @@ async function sendMessage() {
   const text = input.value.trim();
   if (!text) return;
 
-  // User message
+  /* USER MESSAGE */
   addMessage(text, "user");
   input.value = "";
+
+  /* ---------------- BRAIN ---------------- */
 
   showThinking("🧠 Processing…");
 
   try {
-    /* 1️⃣ Brain (deterministic) */
     const brainRes = await fetch(`${API_BASE}/brain`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ message: text })
     });
 
+    if (!brainRes.ok) {
+      throw new Error("Brain API failed");
+    }
+
     const brainData = await brainRes.json();
     removeThinking();
 
-    // 🧠 Brain Debug Output (same as old, but labeled)
     addMessage(
       "🧠 Brain Output:\n" +
         JSON.stringify(brainData.result, null, 2),
       "system"
     );
 
-    /* 2️⃣ LLM (human reply) */
-    showThinking("💬 Generating reply…");
+  } catch (brainErr) {
+    removeThinking();
+    addMessage("⚠️ Brain service unreachable", "system");
+    console.error("Brain error:", brainErr);
+    return; // ❌ STOP — no LLM if brain failed
+  }
 
-    try {
-      const llmRes = await fetch(`${API_BASE}/llm`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: text })
-      });
+  /* ---------------- LLM (GEMINI) ---------------- */
 
-      const llmData = await llmRes.json();
-      removeThinking();
+  showThinking("💬 Generating reply…");
 
-      addMessage(
-        llmData?.out || "No human reply available",
-        "system"
-      );
-    } catch (llmErr) {
-      removeThinking();
-      addMessage(
-        "⚠️ Brain OK, but human reply unavailable",
-        "system"
-      );
-      console.error("LLM error:", llmErr);
+  try {
+    const llmRes = await fetch(`${API_BASE}/llm`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt: text })
+    });
+
+    if (!llmRes.ok) {
+      const errText = await llmRes.text();
+      throw new Error(errText || "LLM request failed");
     }
 
-  } catch (err) {
+    const llmData = await llmRes.json();
     removeThinking();
-    addMessage("⚠️ Cloud Brain not reachable", "system");
-    console.error("Brain error:", err);
+
+    addMessage(
+      llmData.out || "⚠️ Gemini returned empty response",
+      "system"
+    );
+
+  } catch (llmErr) {
+    removeThinking();
+    addMessage(
+      "⚠️ Gemini reply failed (check backend logs)",
+      "system"
+    );
+    console.error("LLM error:", llmErr);
   }
 }
 
